@@ -25,7 +25,7 @@ passport.use(new GitHubStrategy(
   {
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: process.env.GITHUB_CALLBACK_URL || 'http://localhost:8000/auth/github/callback'
+    callbackURL: process.env.GITHUB_CALLBACK_URL || 'https://project-mate-ae31.onrender.com/auth/github/callback'
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
@@ -77,7 +77,7 @@ passport.use(new GoogleStrategy(
   {
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:8000/auth/google/callback'
+    callbackURL: process.env.GOOGLE_CALLBACK_URL || 'https://project-mate-ae31.onrender.com/auth/google/callback'
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
