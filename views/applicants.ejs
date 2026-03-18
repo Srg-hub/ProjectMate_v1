@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <%- include('./partials/head') %>
+    <title>Manage Team · ProjectMate</title>
+  </head>
+  <body class="pm-body">
+    <div class="pm-grid-overlay"></div>
+
+    <%- include('./partials/navbar') %>
+
+    <main class="pm-page">
+      <header class="pm-page-header">
+        <div>
+          <h1 class="pm-page-title">Manage Team: "<%= project_.title %>"</h1>
+          <p class="pm-page-subtitle">
+            Review applicants, approve collaborators, and manage your team.
+          </p>
+          <p class="pm-page-subtitle" style="font-size: 0.9rem; margin-top: 0.5rem;">
+            <span class="pm-member-indicator pm-tooltip" data-tooltip="Total members approved and working on this project">
+              👥 Team: <span class="pm-member-count"><%= (project_.approved_users && project_.approved_users.length) || 0 %></span> / <%= project_.maxApplicants || 1 %>
+            </span>
+            | 
+            <span class="pm-tooltip" data-tooltip="Applicants waiting for your review">
+              📋 Pending: <strong><%= (project_.applicants && project_.applicants.length) || 0 %></strong>
+            </span>
+          </p>
+        </div>
+        <div class="pm-page-actions">
+          <a href="/project/show" class="pm-btn pm-btn-ghost">Back to my projects</a>
+          <% if (project_.status !== 'FINISHED' && project_.approved_users && project_.approved_users.length > 0) { %>
+            <form action="/project/<%= project_._id %>/complete" method="POST" style="display: inline;">
+              <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <% } %>
+              <button type="submit" class="pm-btn-manage-team" onclick="return confirm('Mark this project as complete? You can still manage the team after.')">
+                ✅ Mark Complete
+              </button>
+            </form>
+          <% } %>
+        </div>
+      </header>
+
+      <!-- APPROVED TEAM MEMBERS SECTION -->
+      <% if (project_.approved_users && project_.approved_users.length > 0) { %>
+        <div style="margin-bottom: 3rem;">
+          <h2 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--pm-text);">
+            👥 Approved Team Members (<%= project_.approved_users.length %>)
+          </h2>
+          <section class="pm-section-grid">
+            <% project_.approved_users.forEach(member => { %>
+              <article class="pm-card" style="border: 1.5px solid rgba(34, 197, 94, 0.3); background: linear-gradient(135deg, rgba(34, 197, 94, 0.05) 0%, rgba(74, 222, 128, 0.03) 100%);">
+                <div class="pm-card-header">
+                  <div>
+                    <div class="pm-card-title"><%= member.name || 'Team Member' %></div>
+                    <div class="pm-card-subtitle"><%= member.email || 'No email provided' %></div>
+                  </div>
+                  <span class="pm-pill pm-tooltip" data-tooltip="Ready to collaborate on this project" style="background: rgba(34, 197, 94, 0.2); color: #22c55e;">✓ Approved</span>
+                </div>
+
+                <% if (member.bio) { %>
+                  <p class="pm-card-subtitle mb-2"><%= member.bio %></p>
+                <% } %>
+
+                <% if (member.skills) { %>
+                  <div class="pm-card-subtitle" style="margin: 1rem 0;">
+                    <strong>Skills:</strong> <%= member.skills %>
+                  </div>
+                <% } %>
+
+                <div class="pm-list" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--pm-border-subtle);">
+                  <% if (member.phone) { %>
+                    <div class="pm-list-row">
+                      <div class="pm-list-main">Phone</div>
+                      <div class="pm-list-meta"><%= member.phone %></div>
+                    </div>
+                  <% } %>
+                </div>
+
+                <div style="margin-top: 1rem;">
+                  <form action="/project/<%= project_._id %>/approved/<%= member._id %>/remove" method="POST" style="display: inline;">
+                    <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <% } %>
+                    <button type="submit" class="pm-btn pm-btn-ghost w-100 justify-content-center pm-tooltip" data-tooltip="Remove from project immediately" onclick="return confirm('Remove <%= member.name %> from the team? They will be notified.')">
+                      🚫 Remove from Team
+                    </button>
+                  </form>
+                </div>
+              </article>
+            <% }) %>
+          </section>
+        </div>
+      <% } else if (project_.applicants.length === 0) { %>
+        <div class="pm-card" style="background: rgba(139, 92, 246, 0.05); border: 1px solid rgba(139, 92, 246, 0.2); text-align: center; padding: 2rem; margin-bottom: 2rem;">
+          <div style="font-size: 2rem; margin-bottom: 1rem;">👥</div>
+          <h3 class="pm-card-title">No team members yet</h3>
+          <p class="pm-card-subtitle">Approve applicants below to build your team</p>
+        </div>
+      <% } %>
+
+      <!-- PENDING APPLICANTS SECTION -->
+      <div>
+        <h2 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--pm-text);">
+          📋 Pending Applicants (<%= (project_.applicants && project_.applicants.length) || 0 %>)
+        </h2>
+        
+        <% if (project_.applicants && project_.applicants.length > 0) { %>
+          <section class="pm-section-grid">
+            <% project_.applicants.forEach(applicant => { %>
+              <article class="pm-card">
+                <div class="pm-card-header">
+                  <div>
+                    <div class="pm-card-title"><%= applicant.user.name || 'Applicant' %></div>
+                    <div class="pm-card-subtitle"><%= applicant.user.email || 'No email provided' %></div>
+                  </div>
+                </div>
+
+                <% if (applicant.user.bio) { %>
+                  <p class="pm-card-subtitle mb-2"><%= applicant.user.bio %></p>
+                <% } %>
+
+                <% if (applicant.user.skills) { %>
+                  <div class="pm-card-subtitle" style="margin: 1rem 0;">
+                    <strong>Skills:</strong> <%= applicant.user.skills %>
+                  </div>
+                <% } %>
+
+                <div class="pm-list" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--pm-border-subtle);">
+                  <div class="pm-list-row">
+                    <div class="pm-list-main pm-tooltip" data-tooltip="When they submitted their application">Applied</div>
+                    <div class="pm-list-meta"><%= new Date(applicant.appliedAt).toLocaleDateString() %></div>
+                  </div>
+                </div>
+
+                <% 
+                  const seatsFull = (((project_.approved_users && project_.approved_users.length) || 0) >= (project_.maxApplicants || 1));
+                %>
+
+                <div class="mt-3 d-flex gap-2">
+                  <% if (!seatsFull) { %>
+                    <form action="/project/<%= project_._id %>/applicants/<%= applicant.user._id %>/approve" method="POST" style="flex: 1;">
+                      <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <% } %>
+                      <button type="submit" class="pm-btn pm-btn-primary w-100 justify-content-center pm-tooltip" data-tooltip="Add to your team and enable collaboration">
+                        ✅ Approve
+                      </button>
+                    </form>
+                  <% } else { %>
+                    <span class="pm-pill pm-tooltip" data-tooltip="Maximum team capacity reached. Remove a member to approve new ones" style="flex: 1; background: rgba(148, 163, 184, 0.18); color: rgba(226, 232, 240, 0.9); text-align: center; padding: 0.75rem;">
+                      ⭕ Team Full
+                    </span>
+                  <% } %>
+                  
+                  <form action="/project/<%= project_._id %>/applicants/<%= applicant.user._id %>/reject" method="POST" style="flex: 1;">
+                    <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <% } %>
+                    <button type="submit" class="pm-btn pm-btn-ghost w-100 justify-content-center pm-tooltip" data-tooltip="Decline this applicant (they won't be notified)" onclick="return confirm('Reject this applicant?')">
+                      ❌ Reject
+                    </button>
+                  </form>
+                </div>
+              </article>
+            <% }) %>
+          </section>
+        <% } else { %>
+          <div class="pm-card" style="background: rgba(34, 197, 94, 0.05); border: 1px solid rgba(34, 197, 94, 0.2); text-align: center; padding: 2rem;">
+            <div style="font-size: 2rem; margin-bottom: 1rem;">🎉</div>
+            <h3 class="pm-card-title">No pending applicants</h3>
+            <p class="pm-card-subtitle">All applicants have been reviewed or rejected</p>
+          </div>
+        <% } %>
+      </div>
+    </main>
+
+    <%- include('./partials/footer') %>
+    <%- include('./partials/scripts') %>
+  </body>
+</html>
