@@ -70,8 +70,10 @@ app.use(passport.session());
 
 // CSRF protection for state-changing requests (uses cookie to store token)
 const csrfProtection = csurf({ cookie: true });
-// Apply CSRF protection globally so GET pages can obtain a token for forms
-app.use(csrfProtection);
+// Apply CSRF protection for certain actions so GET pages can obtain a token for forms
+// app.use(csrfProtection);
+app.use("/user", csrfProtection);
+app.use("/project", csrfProtection);
 
 // Attach CSRF token (when available) to views
 app.use((req, res, next) => {
@@ -366,4 +368,13 @@ app.use((err, req, res, next) => {
   }
   res.status(status);
   res.render('error', { error: err, currentPath: req.path });
+});
+
+// CSRF failures handling
+app.use((err, req, res, next) => {
+    if (err.code === "EBADCSRFTOKEN") {
+        res.clearCookie("_csrf");
+        return res.redirect("/user/login");
+    }
+    next(err);
 });
