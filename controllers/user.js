@@ -4,6 +4,27 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const logger = require('../utils/logger');
 
+// DEMO mode
+if (process.env.DEMO_MODE === "true") {
+    const demoUser = {
+        _id: "demo-user",
+        username: "Demo User",
+        email: "demo@projectmate.com",
+        role: "student"
+    };
+
+    const token = jwt.sign(
+        demoUser,
+        process.env.JWT_SECRET
+    );
+
+    res.cookie("token", token, {
+        httpOnly: true
+    });
+
+    return res.redirect("/dashboard");
+}
+
 // --- NEW FUNCTION: Get Profile Statistics ---
 async function getProfileStats(userId) {
     try {
